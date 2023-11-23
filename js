@@ -1,93 +1,53 @@
-document.addEventListener('DOMContentLoaded', function () {
-  console.log('Página carregada');
-  carregarTarefas();
+function adicionarTarefa() {
+  var entradaTarefa = document.getElementById("entrada-tarefa");
+  var listaTarefas = document.getElementById("lista-tarefas");
 
-  function carregarTarefas() {
-    console.log('Carregando tarefas...');
-    fetch('http://localhost:5000/tasks')
-      .then(response => response.json())
-      .then(data => {
-        console.log('Tarefas carregadas:', data);
-        document.getElementById('lista-tarefas').innerHTML = '';
-
-        for (const task of data) {
-          adicionarTarefaNaLista(task.description, task.id);
-        }
-      })
-      .catch(error => {
-        console.error('Erro na requisição:', error);
-      });
-  }
-
-  function adicionarTarefaNaLista(tarefa, taskId) {
-    var listaTarefas = document.getElementById('lista-tarefas');
-    var linhaTarefa = document.createElement('tr');
-    linhaTarefa.innerHTML = '<td>' + tarefa + '</td>' +
+  if (entradaTarefa.value.trim() !== "") {
+    var linhaTarefa = document.createElement("tr");
+    linhaTarefa.className = "item-tarefa";
+    linhaTarefa.innerHTML =
+      '<td>' + entradaTarefa.value + '</td>' +
       '<td>' +
-      '<button onclick="editarTarefa(' + taskId + ')">Editar</button>' +
-      '<button onclick="removerTarefa(' + taskId + ')">Excluir</button>' +
+      '<button onclick="editarTarefa(this)">Editar</button>' +
+      '<button onclick="removerTarefa(this)">Excluir</button>' +
       '</td>';
     listaTarefas.appendChild(linhaTarefa);
+    entradaTarefa.value = "";
   }
+}
 
-  function adicionarTarefa() {
-    console.log('Adicionando tarefa...');
-    var entradaTarefa = document.getElementById('entrada-tarefa');
-    var novaTarefa = { "description": entradaTarefa.value };
+function removerTarefa(botao) {
+  var linhaTarefa = botao.closest("tr");
+  linhaTarefa.parentNode.removeChild(linhaTarefa);
+}
 
-    fetch('http://localhost:5000/tasks', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(novaTarefa),
+function editarTarefa(taskId) {
+  console.log('Editando tarefa:', taskId);
+  var novoNomeTarefa = prompt('Editar tarefa:');
+  if (novoNomeTarefa !== null) {
+    editarTarefaNoServidor(taskId, novoNomeTarefa);
+  }
+}
+
+function editarTarefaNoServidor(taskId, novoNomeTarefa) {
+  fetch(`http://localhost:5000/tasks/${taskId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ description: novoNomeTarefa }),
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Erro na requisição PUT');
+      }
+      return response.json();
     })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Tarefa adicionada:', data);
-        carregarTarefas();
-      })
-      .catch(error => {
-        console.error('Erro na requisição POST:', error);
-      });
-
-    entradaTarefa.value = '';
-  }
-
-  function removerTarefa(taskId) {
-    console.log('Removendo tarefa:', taskId);
-    fetch(`http://localhost:5000/tasks/${taskId}`, {
-      method: 'DELETE',
+    .then(data => {
+      console.log('Tarefa editada:', data);
+      carregarTarefas();
     })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Tarefa removida:', data);
-        carregarTarefas();
-      })
-      .catch(error => {
-        console.error('Erro na requisição DELETE:', error);
-      });
-  }
-
-  function editarTarefa(taskId) {
-    console.log('Editando tarefa:', taskId);
-    var novoNomeTarefa = prompt('Editar tarefa:');
-    if (novoNomeTarefa !== null) {
-      fetch(`http://localhost:5000/tasks/${taskId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ "description": novoNomeTarefa }),
-      })
-        .then(response => response.json())
-        .then(data => {
-          console.log('Tarefa editada:', data);
-          carregarTarefas();
-        })
-        .catch(error => {
-          console.error('Erro na requisição PUT:', error);
-        });
-    }
-  }
-});
+    .catch(error => {
+      console.error('Erro na requisição PUT:', error);
+    });
+}
