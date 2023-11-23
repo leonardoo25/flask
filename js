@@ -21,33 +21,12 @@ function removerTarefa(botao) {
   linhaTarefa.parentNode.removeChild(linhaTarefa);
 }
 
-function editarTarefa(taskId) {
-  console.log('Editando tarefa:', taskId);
-  var novoNomeTarefa = prompt('Editar tarefa:');
+function editarTarefa(botao) {
+  var linhaTarefa = botao.closest("tr");
+  var nomeAntigoTarefa = linhaTarefa.querySelector("td:first-child").innerText;
+  
+  var novoNomeTarefa = prompt('Editar tarefa:', nomeAntigoTarefa);
   if (novoNomeTarefa !== null) {
-    editarTarefaNoServidor(taskId, novoNomeTarefa);
+    linhaTarefa.querySelector("td:first-child").innerText = novoNomeTarefa;
   }
-}
-
-function editarTarefaNoServidor(taskId, novoNomeTarefa) {
-  fetch(`http://localhost:5000/tasks/${taskId}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ description: novoNomeTarefa }),
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Erro na requisição PUT');
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log('Tarefa editada:', data);
-      carregarTarefas();
-    })
-    .catch(error => {
-      console.error('Erro na requisição PUT:', error);
-    });
 }
